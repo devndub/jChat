@@ -1,4 +1,8 @@
-package view;
+package views;
+
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -12,21 +16,25 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import models.LoginModel;
+import views.LoginFailed;
 
-public class Login extends Application{
-	public void main(String[] args){
-		launch(args);
-	}
+public class Login extends Application implements Observer{
+	final Text signin = new Text();
+	LoginModel actiontarget;
+	Button btn;
+	TextField userTextField;
+	PasswordField pwBox;
+	Stage primaryStage;
 	
 	@Override
-	public void start(Stage primaryStage){
+	public void start(Stage primaryStage) throws IOException{
+		this.primaryStage = primaryStage;
 		primaryStage.setTitle("JavFX Welcome");
 		
 		GridPane grid = new GridPane();
@@ -53,42 +61,37 @@ public class Login extends Application{
 		
 		//grid.setGridLinesVisible(true);
 		
-		Button btn = new Button("Sign in");
+		btn = new Button("Sign in");
 		HBox hbBtn = new HBox(10);
 		hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
 		hbBtn.getChildren().add(btn);
 		grid.add(hbBtn, 1, 4);
 		
-		final Text actiontarget = new Text();
-		grid.add(actiontarget, 1, 6);
+		//add functionality to login button
+		actiontarget = new LoginModel();
+		actiontarget.addObserver(this);
 		btn.setOnAction(new EventHandler<ActionEvent>() {
-			 
-		    @Override
-		    public void handle(ActionEvent e) {
-		        actiontarget.setFill(Color.FIREBRICK);
-		        actiontarget.setText("Sign in button pressed");
-		    }
-		});
-		
-		Button hackbtn = new Button("Hack Program");
-		VBox vbbtn = new VBox();
-		vbbtn.setAlignment(Pos.BOTTOM_LEFT);
-		vbbtn.getChildren().add(hackbtn);
-		grid.add(vbbtn, 0, 5,2,1);
-		
-		final Text customtarget = new Text();
-		grid.add(customtarget, 0, 6);
-		hackbtn.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e){
-				customtarget.setFill(Color.DARKTURQUOISE);
-				customtarget.setText("Hacked!!");
+				actiontarget.login(userTextField.getText(), pwBox.getText());
 			}
 		});
+		grid.add(signin, 1, 6);
 		
 		Scene scene = new Scene(grid,300,275);
 		primaryStage.setScene(scene);
 		primaryStage.show();
+	}
+	
+	public void update(Observable t, Object o){
+		signin.setFill(Color.FIREBRICK);
+        signin.setText("Sign in: " + actiontarget.getValid());
+        if (actiontarget.hasConnection() == false)  {@SuppressWarnings("unused")
+		LoginFailed wdw = new LoginFailed();}
+        else{
+        	ChatWindow main_chat = new ChatWindow();
+        	primaryStage.close();
+        }
 	}
 
 }

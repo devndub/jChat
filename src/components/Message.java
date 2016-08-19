@@ -9,9 +9,9 @@ public class Message {
 	public Message(String text){
 		msg_string = text;
 		String[] parts = msg_string.split(":",3);
-		length = Integer.parseInt(parts[0],16);
 		header = parts[1];
 		body = parts[2];
+		length = Integer.parseInt(Integer.toString((":"+header+":"+body).getBytes().length),16);
 	}
 	public Message(String header, String body){
 		String length = String.format("%08x", (header+body).getBytes().length);

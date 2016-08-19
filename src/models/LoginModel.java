@@ -1,50 +1,53 @@
 package models;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.net.ConnectException;
 
-public class LoginModel extends Model{
-		private ArrayList<String> usernames = new ArrayList<String>();
-		private ArrayList<String> passwords = new ArrayList<String>();
+import components.Connection;
+import components.Message;
+
+public class LoginModel extends java.util.Observable{
+		Connection connection = null;
 		
 		private boolean valid = false;
+		private String indata = "";
 		
-		public LoginModel() throws IOException{
-		//PRE: File 'userpass.txt' must exist and be properly formatted:
-		//			myusername:mypassword
-			BufferedReader rdr = new BufferedReader(new FileReader("userpass.txt"));
-			String line;
-			String[] parts;
-			while (rdr.ready()){
-				line = rdr.readLine();
-				parts = line.split(":");
-				usernames.add(parts[0]);
-				passwords.add(parts[1]);
-			}
-			rdr.close();
-		}
+		public LoginModel(){}
 		
-		public void exists(String username, String password){
-			for (String user: usernames){
-				if (user.equals(username)){
-					for (String pass: passwords){
-						if (pass.equals(password)){
-							valid = true;
-							setChanged();
-							notifyObservers();
-							return;
-						}
-					}
-				}
+		public void login(String username, String password){
+			Connection login_connection = null;
+			//do connection stuff
+			try {
+				login_connection = new Connection("localhost",1234);
+				String to_send = username+":"+password;
+				login_connection.send((new Message("LOGIN",to_send)).getText());
+				login_connection.receive();
+				indata = login_connection.getMessage().getBody();
+			} catch (ConnectException e) {
+				e.printStackTrace();
+			} catch (IOException e){
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			valid = false;
+			//if data returns true, we have valid credentials
+			if (indata.equals("True")) {valid = true; connection = login_connection;}
+			else if (indata.equals("False")) {valid = false; connection = null;}
+			
 			setChanged();
 			notifyObservers();
 		}
 		
 		public boolean getValid(){
 			return valid;
+		}
+		
+		public boolean hasConnection(){
+			if (connection == null) return false;
+			else return true;
+		}
+		
+		public Connection getConnection(){
+			return connection;
 		}
 }
