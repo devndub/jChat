@@ -20,7 +20,7 @@ public class LoginModel extends java.util.Observable{
 			try {
 				login_connection = new Connection("localhost",1234);
 				String to_send = username+":"+password;
-				login_connection.send((new Message("LOGIN",to_send)).getText());
+				login_connection.send("LOGIN",to_send);
 				login_connection.receive();
 				indata = login_connection.getMessage().getBody();
 			} catch (ConnectException e) {
@@ -33,6 +33,7 @@ public class LoginModel extends java.util.Observable{
 			//if data returns true, we have valid credentials
 			if (indata.equals("True")) {valid = true; connection = login_connection;}
 			else if (indata.equals("False")) {valid = false; connection = null;}
+			else {valid = false; connection = null;}
 			
 			setChanged();
 			notifyObservers();

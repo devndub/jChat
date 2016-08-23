@@ -89,7 +89,7 @@ public class Login extends Application implements Observer{
         if (actiontarget.hasConnection() == false)  {@SuppressWarnings("unused")
 		LoginFailed wdw = new LoginFailed();}
         else{
-        	ChatWindow main_chat = new ChatWindow();
+        	ChatWindow main_chat = new ChatWindow(actiontarget.getConnection());
         	primaryStage.close();
         }
 	}

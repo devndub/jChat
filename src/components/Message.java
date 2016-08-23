@@ -11,10 +11,10 @@ public class Message {
 		String[] parts = msg_string.split(":",3);
 		header = parts[1];
 		body = parts[2];
-		length = Integer.parseInt(Integer.toString((":"+header+":"+body).getBytes().length),16);
+		length = Integer.parseInt(Integer.toString((":"+header+":"+body).length()),16);
 	}
 	public Message(String header, String body){
-		String length = String.format("%08x", (header+body).getBytes().length);
+		String length = String.format("%08x", (":"+header+":"+body).length());
 		msg_string = length+":"+header+":"+body;
 		this.header = header;
 		this.body = body;
