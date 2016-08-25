@@ -1,39 +1,37 @@
 package models;
 
-import java.io.IOException;
-import java.net.ConnectException;
-
 import components.Connection;
-import components.Message;
 
-public class LoginModel extends java.util.Observable{
+public class LoginModel extends java.util.Observable implements Runnable{
 		Connection connection = null;
 		
 		private boolean valid = false;
 		private String indata = "";
+		private Thread t;
 		
-		public LoginModel(){}
+		private String ip, username, password;
+		private int port;
 		
-		public void login(String username, String password){
-			Connection login_connection = null;
-			//do connection stuff
-			try {
-				login_connection = new Connection("localhost",1234);
+		private Exception login_exception = null;
+		
+		private boolean thread_running = false;
+		
+		public void login(){
+			try{
+				Connection login_connection = null;
+				//do connection stuff
+				login_connection = new Connection(ip,port);
 				String to_send = username+":"+password;
 				login_connection.send("LOGIN",to_send);
 				login_connection.receive();
 				indata = login_connection.getMessage().getBody();
-			} catch (ConnectException e) {
-				e.printStackTrace();
-			} catch (IOException e){
-				e.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
+				//if data returns true, we have valid credentials
+				if (indata.equals("True")) {valid = true; connection = login_connection;}
+				else if (indata.equals("False")) {valid = false; connection = null; login_exception = null;}
+				else {valid = false; connection = null; login_exception = null;}
+			} catch (Exception e){
+				login_exception = e;
 			}
-			//if data returns true, we have valid credentials
-			if (indata.equals("True")) {valid = true; connection = login_connection;}
-			else if (indata.equals("False")) {valid = false; connection = null;}
-			else {valid = false; connection = null;}
 			
 			setChanged();
 			notifyObservers();
@@ -43,6 +41,10 @@ public class LoginModel extends java.util.Observable{
 			return valid;
 		}
 		
+		public Exception getException(){
+			return login_exception;
+		}
+		
 		public boolean hasConnection(){
 			if (connection == null) return false;
 			else return true;
@@ -50,5 +52,23 @@ public class LoginModel extends java.util.Observable{
 		
 		public Connection getConnection(){
 			return connection;
+		}
+		
+		public void run() {
+			thread_running = true;
+			login();
+			thread_running = false;
+		}
+		
+		public void start(String ip, int port, String username, String password){
+			this.ip = ip;
+			this.port = port;
+			this.username = username;
+			this.password = password;
+			
+			if (t == null || thread_running == false){
+				t = new Thread(this,"CONNECTION_THREAD");
+				t.start();
+			}
 		}
 }

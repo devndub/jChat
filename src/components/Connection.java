@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -109,6 +108,7 @@ public class Connection extends java.util.Observable implements Runnable{
 				receive();
 			} catch (Exception e){
 				this.keep_alive = false;
+				//e.printStackTrace();
 				received.add(new Message("CLOSE","Connection lost."));
 			}
 		}

@@ -1,28 +1,20 @@
 package views;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Scanner;
 
 import components.Connection;
 import components.Message;
-import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.InputEvent;
@@ -31,10 +23,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -44,6 +32,7 @@ public class ChatWindow implements Observer{
 	TextArea msgs;
 	TextField enter_field;
 	int ROWS = 17;
+	ListView<String> listView;
 	public ChatWindow(Connection c){
 		connection = c;
 		connection.addObserver(this);
@@ -58,7 +47,7 @@ public class ChatWindow implements Observer{
 		grid.setPadding(new Insets(25,25,25,25));
 		
 		names = FXCollections.observableArrayList();
-		ListView<String> listView = new ListView<String>();
+		listView = new ListView<String>();
 		listView.setPrefWidth(200);
 		listView.setItems(names);
 		VBox vb = new VBox();
@@ -66,7 +55,7 @@ public class ChatWindow implements Observer{
 		vb.setPadding(new Insets(15,15,15,15));
 		vb.getChildren().add(listView);
 		
-		msgs = new TextArea("Test\nnextline\nthirdline");
+		msgs = new TextArea("");
 		msgs.setPrefRowCount(ROWS);
 		msgs.setEditable(false);
 		VBox vb2 = new VBox();
@@ -131,18 +120,26 @@ public class ChatWindow implements Observer{
 		Message msg = connection.getMessage();
 		if (msg != null){
 			if (msg.getHeader().equals("ONLINE")){
-				if (!names.contains(msg.getBody()))
-					names.add(msg.getBody());
+				if (!names.contains(msg.getBody())){
+					Platform.runLater(() -> names.add(msg.getBody()));
+				}
 			}
 			else if (msg.getHeader().equals("OFFLINE")){
-				if (names.contains(msg.getBody()))
-					names.remove(msg.getBody());
+				if (names.contains(msg.getBody())){
+					Platform.runLater(() -> names.remove(msg.getBody()));
+				}
 			}
 			else if (msg.getHeader().equals("MSG")){
-				msgs.appendText("\n"+msg.getBody());
+				if (!msgs.getText().equals(""))
+					msgs.appendText("\n "+msg.getBody());
+				else
+					msgs.appendText(" "+msg.getBody());
 			}
 			else if (msg.getHeader().equals("CLOSE")){
-				msgs.appendText("\n"+msg.getBody());
+				if (!msgs.getText().equals(""))
+					msgs.appendText("\n"+msg.getBody());
+				else
+					msgs.appendText(msg.getBody());
 			}
 		}
 	}
