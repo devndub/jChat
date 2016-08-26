@@ -131,10 +131,15 @@ public class ChatWindow implements Observer{
 				}
 			}
 			else if (msg.getHeader().equals("MSG")){
+				String body = msg.getBody();
+				String[] parts = body.split(":",2);
+				String name = parts[0];
+				String text = parts[1];
+				
 				if (!msgs.getText().equals(""))
-					msgs.appendText("\n "+msg.getBody());
+					msgs.appendText("\n"+name+": "+text);
 				else
-					msgs.appendText(" "+msg.getBody());
+					msgs.appendText(name+": " + text);
 			}
 			else if (msg.getHeader().equals("CLOSE")){
 				if (!msgs.getText().equals(""))

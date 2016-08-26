@@ -117,6 +117,7 @@ public class Connection extends java.util.Observable implements Runnable{
 					this.keep_alive = false;
 					received.add(new Message("CLOSE","Connection lost."));
 					if (!(e instanceof SocketException)) e.printStackTrace();
+					else e.printStackTrace();
 				}
 			}
 		}
@@ -128,6 +129,7 @@ public class Connection extends java.util.Observable implements Runnable{
 					this.keep_alive = false;
 					received.add(new Message("CLOSE","Connection lost."));
 					if (!(e instanceof SocketException)) e.printStackTrace();
+					else e.printStackTrace();
 				}
 			}
 		}
