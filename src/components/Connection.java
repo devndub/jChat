@@ -5,9 +5,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayDeque;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 
 import components.Message;
 
@@ -15,10 +18,11 @@ public class Connection extends java.util.Observable implements Runnable{
 	private Socket connection;
 	private LinkedList<Message> received = new LinkedList<Message>();
 	private LinkedList<Message> sent = new LinkedList<Message>();
+	private ArrayDeque<Message> to_send = new ArrayDeque<Message>();
 	private InputStream in;
 	private OutputStream out;
 	private PrintWriter print_out;
-	private Thread t;
+	private Thread recv_thread, send_thread;
 	private boolean keep_alive = true;
 
 	public Connection(String host, int port) throws UnknownHostException, IOException{
@@ -54,22 +58,24 @@ public class Connection extends java.util.Observable implements Runnable{
 		notifyObservers();
 	}
 	
-	//DEPRECATED, do not use
-	public void send(String msg) throws Exception{
-		Message msg_obj = new Message(msg);
-		print_out.println(msg_obj.getText());
-		sent.add(msg_obj);
-	}
-	
-	public void send(String header, String msg) throws Exception{
-		Message msg_obj = new Message(header, msg);
-		try{
+	public void send() throws Exception{
+		Message msg_obj = to_send.poll();
+		if (msg_obj == null) TimeUnit.MILLISECONDS.sleep(500);
+		else{
 			print_out.println(msg_obj.getText());
 			sent.add(msg_obj);
-		} catch (Exception e){
-			
 		}
-		
+	}
+	
+	public void send(String header, String msg){
+		Message msg_obj = new Message(header, msg);
+		to_send.add(msg_obj);
+	}
+	
+	public void forceSend(String header, String msg){
+		Message msg_obj = new Message(header, msg);
+		print_out.println(msg_obj.getText());
+		sent.add(msg_obj);
 	}
 	
 	public Message getMessage(){
@@ -103,21 +109,41 @@ public class Connection extends java.util.Observable implements Runnable{
 
 	@Override
 	public void run() {
-		while (this.keep_alive){
-			try{
-				receive();
-			} catch (Exception e){
-				this.keep_alive = false;
-				//e.printStackTrace();
-				received.add(new Message("CLOSE","Connection lost."));
+		if (Thread.currentThread().getName().equals("RECV_THREAD")){
+			while (this.keep_alive){
+				try{
+					receive();
+				} catch (Exception e){
+					this.keep_alive = false;
+					received.add(new Message("CLOSE","Connection lost."));
+					if (!(e instanceof SocketException)) e.printStackTrace();
+				}
+			}
+		}
+		else{
+			while (this.keep_alive){
+				try{
+					send();
+				} catch (Exception e){
+					this.keep_alive = false;
+					received.add(new Message("CLOSE","Connection lost."));
+					if (!(e instanceof SocketException)) e.printStackTrace();
+				}
 			}
 		}
 	}
 	
-	public void start(){
-		if (t == null){
-			t = new Thread(this,"CONNECTION_THREAD");
-			t.start();
+	public void startReceiving(){
+		if (recv_thread == null){
+			recv_thread = new Thread(this,"RECV_THREAD");
+			recv_thread.start();
+		}
+	}
+	
+	public void startSending(){
+		if (send_thread == null){
+			send_thread = new Thread(this,"SEND_THREAD");
+			send_thread.start();
 		}
 	}
 	

@@ -22,7 +22,7 @@ public class LoginModel extends java.util.Observable implements Runnable{
 				//do connection stuff
 				login_connection = new Connection(ip,port);
 				String to_send = username+":"+password;
-				login_connection.send("LOGIN",to_send);
+				login_connection.forceSend("LOGIN",to_send);
 				login_connection.receive();
 				indata = login_connection.getMessage().getBody();
 				//if data returns true, we have valid credentials

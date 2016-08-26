@@ -36,7 +36,8 @@ public class ChatWindow implements Observer{
 	public ChatWindow(Connection c){
 		connection = c;
 		connection.addObserver(this);
-		connection.start();
+		connection.startReceiving();
+		connection.startSending();
 
 		Stage stage = new Stage();
 		stage.setTitle("jChat");

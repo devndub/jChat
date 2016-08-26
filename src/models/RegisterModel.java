@@ -16,7 +16,7 @@ public class RegisterModel extends java.util.Observable implements Runnable{
 	public void register(){
 		try {
 			connection = new Connection(ip,port);
-			connection.send("REGISTER",username+":"+password);
+			connection.forceSend("REGISTER",username+":"+password);
 			connection.receive();
 			indata = connection.getMessage().getBody();
 			if (indata.equals("True")) valid = true;
